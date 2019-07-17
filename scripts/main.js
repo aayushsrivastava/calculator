@@ -1,7 +1,7 @@
 "use strict";
 
 function add(a, b) {
-    return a + b;
+    return Number(a) + Number(b);
 }
 
 function subtract(a, b) {
@@ -33,7 +33,7 @@ function operate(op, n1, n2) {
     }
 }
 
-let display = document.querySelector('div#display');
+let display = document.querySelector('div#display span');
 let buttons = document.querySelectorAll('.button button');
 buttons.forEach(button => button.addEventListener("click", takeInput));
 
@@ -55,6 +55,9 @@ function takeInput(e) {
             }
             else 
                 expression[expression.length - 1] = lastToken.slice(0, -1);
+        }
+        if (e.target.id === 'solve') {
+            expression = [evaluate()];
         }
         updateDisplay();
         return;
@@ -93,4 +96,36 @@ function updateDisplay() {
         display.innerText = '';
     }
     expression.forEach(token => display.innerText += token);
+}
+
+function evaluate() {
+    let value_stack = [];
+    let operator_stack = [];
+
+    expression.forEach(token => {
+        if (isNaN(token)) {
+            if (['+', '-'].includes(token) && ['*', '/'].includes(operator_stack.slice(-1).pop())) {
+                let op2 = value_stack.pop();
+                let op1 = value_stack.pop();
+                let res = operate(operator_stack.pop(), op1, op2);
+                value_stack.push(res);
+            }
+            else {
+                operator_stack.push(token);
+            }
+        }
+        else {
+            value_stack.push(token);
+        }
+    })
+    if (value_stack.length > 1) {
+        while (operator_stack.length > 0) {
+            let op2 = value_stack.pop();
+            let op1 = value_stack.pop();
+            let res = operate(operator_stack.pop(), op1, op2);
+            value_stack.push(res);
+        }
+    }
+
+    return value_stack.pop();
 }
